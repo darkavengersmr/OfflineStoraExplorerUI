@@ -5,4 +5,7 @@ export default {
   setLastId(state, payload) {
     state.lastId = payload;
   },
+  setFullPath(state, payload) {
+    state.fullPath = payload;
+  },
 };

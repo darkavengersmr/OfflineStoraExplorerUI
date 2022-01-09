@@ -42,7 +42,7 @@ export default {
           "~" +
           f_str.slice(f_str.length - 8, f_str.length);
 
-        return f_str.padEnd(36, "0");
+        return f_str.padEnd(36, " ");
       }
     },
     format_size: function () {

@@ -6,7 +6,7 @@ import actions from "./actions";
 export default createStore({
   state() {
     return {
-      spinnerShow: false,
+      fullPath: [],
       myFiles: [],
       lastId: "None",
     };
