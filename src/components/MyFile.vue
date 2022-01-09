@@ -10,6 +10,8 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 export default {
   props: {
     id: String,
@@ -25,6 +27,9 @@ export default {
     return {};
   },
   computed: {
+    ...mapState({
+      fullPath: "fullPath",
+    }),
     format_name: function () {
       function clearName(str) {
         var ars = str.replace(/[^a-zA-ZА-Яа-яЁё._-\d\s]/gi, "");
@@ -71,7 +76,10 @@ export default {
   },
   methods: {
     clickFile() {
-      if (this.directory == "true" || this.name == "..") {
+      if (
+        this.directory == "true" ||
+        (this.name == ".." && this.fullPath.length > 1)
+      ) {
         this.$emit("clickFile", { id: this.id });
       }
     },
