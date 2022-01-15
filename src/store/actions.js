@@ -10,7 +10,7 @@ export default {
         },
       })
       .catch(function () {});
-    context.commit("setMyFiles", myfiles.data);
+    context.commit("setMyFilesRaw", myfiles.data);
     context.commit("setLastId", myfiles.data[0].parent);
 
     let path = this.state.fullPath;
@@ -21,5 +21,6 @@ export default {
       path.pop();
     }
     context.commit("setFullPath", path);
+    context.commit("setCursorPosition", 0);
   },
 };

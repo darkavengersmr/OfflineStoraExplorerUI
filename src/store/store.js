@@ -8,7 +8,12 @@ export default createStore({
     return {
       fullPath: [],
       myFiles: [],
+      myFilesRaw: [],
       lastId: "None",
+      cursorPosition: -1,
+      slicePosition: 0,
+      cursorDirUp: true,
+      fileManagerHeight: 20,
     };
   },
   mutations: mutations,

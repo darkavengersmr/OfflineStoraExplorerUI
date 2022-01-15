@@ -1,16 +1,16 @@
 <template>
   <div>
-    <div class="my_dir" @click.stop="clickFile(id)" v-if="directory != 'false'">
+    <div class="my_dir" @click.stop="detectClick()" v-if="directory != 'false'">
       <pre><span>│<b> {{ format_name }} </b>│</span><span><b>{{ format_size }}</b></span>│ <span><b>{{ format_date }}</b></span> │</pre>
     </div>
-    <div class="my_dir" @click.stop="clickFile(id)" v-if="directory == 'false'">
-      <pre>│<span class="my_file"> {{ format_name }} </span>│<span class="my_file">{{ format_size }}</span>│ <span class="my_file">{{ format_date }}</span> │</pre>
+    <div class="my_dir" @click.stop="detectClick()" v-if="directory == 'false'">
+      <pre>│<span v-bind:class="{ my_file: !cursor_this }"> {{ format_name }} </span>│<span v-bind:class="{ my_file: !cursor_this }">{{ format_size }}</span>│ <span v-bind:class="{ my_file: !cursor_this }">{{ format_date }}</span> │</pre>
     </div>
   </div>
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapMutations } from "vuex";
 
 export default {
   props: {
@@ -21,10 +21,14 @@ export default {
     date: String,
     parent: String,
     resource: String,
+    cursor_position: Number,
+    cursor_this: Boolean,
   },
   emits: ["clickFile"],
   data() {
-    return {};
+    return {
+      numClicks: 0,
+    };
   },
   computed: {
     ...mapState({
@@ -75,7 +79,19 @@ export default {
     },
   },
   methods: {
-    clickFile() {
+    ...mapMutations({
+      setCursorPosition: "setCursorPosition",
+    }),
+    oneClick() {
+      this.$store.commit("setCursorPosition", this.cursor_position);
+      if (this.name == "..") {
+        this.$store.commit("setCursorDirUp", true);
+      } else {
+        this.$store.commit("setCursorDirUp", false);
+      }
+    },
+    doubleClick() {
+      this.$store.commit("setCursorPosition", this.cursor_position);
       if (
         this.directory == "true" ||
         (this.name == ".." && this.fullPath.length > 1)
@@ -83,23 +99,25 @@ export default {
         this.$emit("clickFile", { id: this.id });
       }
     },
+    detectClick: function () {
+      this.numClicks++;
+      if (this.numClicks === 1) {
+        var self = this;
+        setTimeout(function () {
+          switch (self.numClicks) {
+            case 1:
+              self.oneClick();
+              break;
+            default:
+              self.doubleClick();
+          }
+          self.numClicks = 0;
+        }, 200);
+      }
+    },
   },
 };
 </script>
 
 <style scoped>
-h3 {
-  margin: 0px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 0px;
-}
-a {
-  color: #54fefc;
-}
 </style>
