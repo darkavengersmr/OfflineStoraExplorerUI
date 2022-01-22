@@ -17,4 +17,13 @@ export default {
   setSlicePosition(state, payload) {
     state.slicePosition = payload;
   },
+  setSortReverse(state, payload) {
+    state.sortReverse = payload;
+  },
+  setSortType(state, payload) {
+    state.sortType = payload;
+  },
+  setCommandLine(state, payload) {
+    state.commandLine = payload;
+  },
 };

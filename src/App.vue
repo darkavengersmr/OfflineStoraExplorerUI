@@ -1,13 +1,13 @@
 <template>
   <div>
     <div class="activeCursor">
-      <pre><span> Добавить </span>    <span> Пересинхронизировать </span>    <span> Удалить </span>           <span> Домой </span></pre>
+      <pre>  <span @click.stop="goHome()"> Список ресурсов </span>      <span @click.stop="commandLineSearch()"> Поиск </span>       <span @click.stop="reverseSort()"> Сортировка{{sortArrow}} </span><span @click.stop="nextSortType()">{{displaySortType}}</span></pre>
     </div>
     <pre>┍━ <span class="my_path">{{ format_fullPath }}</span>{{ add_to_fullPath }}┑</pre>
     <pre>
 ┝━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┯━━━━━━━┯━━━━━━━━━━━━━━━━━━┥</pre
     >
-    <pre>│                 <span class="my_path">Имя</span>                  │ <span class="my_path">Размер</span>│   <span class="my_path">Время правки</span>   │</pre>
+    <pre>│                 <span class="my_path" @click.stop="nextSortType(0)">Имя</span>                  │ <span class="my_path" @click.stop="nextSortType(1)">Размер</span>│   <span class="my_path" @click.stop="nextSortType(2)">Время правки</span>   │</pre>
     <my-file
       :id="lastId"
       :name="dir_up"
@@ -45,6 +45,10 @@
     <pre>
 ┕━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┷━━━━━━━┷━━━━━━━━━━━━━━━━━━┙</pre
     >
+    <input v-model="commandLine" class="commandline" />
+    <div>
+      <pre>1<span class="activeCursor">On/off_1</span> 2<span class="activeCursor">On/off_2</span> 3<span class="activeCursor">On/off_3</span> 4<span class="activeCursor">On/off_4</span> 5<span class="activeCursor">On/off_5</span> 6<span class="activeCursor">On/off_6</span> 0<span class="activeCursor">Status</span></pre>
+    </div>
   </div>
 </template>
 
@@ -68,7 +72,27 @@ export default {
       cursorDirUp: "cursorDirUp",
       slicePosition: "slicePosition",
       fileManagerHeight: "fileManagerHeight",
+      sortType: "sortType",
+      sortReverse: "sortReverse",
+      commandLine: "commandLine",
     }),
+    sortArrow: function () {
+      if (this.sortReverse) {
+        return "↑";
+      } else {
+        return "↓";
+      }
+    },
+    displaySortType: function () {
+      switch (this.sortType) {
+        case 1:
+          return "по размеру";
+        case 2:
+          return "по дате";
+        default:
+          return "по имени";
+      }
+    },
     myFiles: function () {
       if (typeof this.myFilesRaw != "undefined") {
         if (this.myFilesRaw.length > this.fileManagerHeight) {
@@ -104,7 +128,7 @@ export default {
       }
       let f_str = clearPath(path);
       if (this.fullPath.length == 1) {
-        f_str = "Offline Stora Explorer v.0.1 ";
+        f_str = "Offline Stora Explorer v.0.4 ";
       }
       if (f_str.length <= 50) {
         return f_str;
@@ -132,14 +156,23 @@ export default {
   methods: {
     ...mapActions({
       downloadMyFiles: "downloadMyFiles",
+      searchMyFiles: "searchMyFiles",
+      sortFiles: "sortFiles",
+      reverseSort: "reverseSort",
     }),
     ...mapMutations({
       setCursorPosition: "setCursorPosition",
+      setCommandLine: "setCommandLine",
     }),
     nextItem(event) {
-      event.stopPropagation();
-      event.preventDefault();
-      if (event.keyCode == 13 && !this.cursorDirUp) {
+      //event.stopPropagation();
+      //event.preventDefault();
+      if (
+        event.keyCode == 13 &&
+        !this.cursorDirUp &&
+        this.myFiles[this.cursorPosition].directory == "true" &&
+        this.commandLine.length <= 9
+      ) {
         this.downloadMyFiles({
           params_id: this.myFiles[this.cursorPosition]._id,
           params_operation: "dir_list",
@@ -174,14 +207,71 @@ export default {
         this.cursorPosition < this.myFiles.length - 1
       ) {
         this.$store.commit("setCursorPosition", this.cursorPosition + 1);
+      } else if (event.keyCode == 8) {
+        if (this.commandLine.length > 9) {
+          this.$store.commit(
+            "setCommandLine",
+            this.commandLine.slice(0, this.commandLine.length - 1)
+          );
+        }
+      }
+    },
+    commandLineInput(event) {
+      event.stopPropagation();
+      event.preventDefault();
+      if (event.keyCode == 13 && this.commandLine.length > 9) {
+        this.searchMyFiles({
+          search_string: this.commandLine.slice(9, this.commandLine.length),
+        });
+        this.$store.commit("setCommandLine", this.commandLine.slice(0, 9));
+      } else if (event.keyCode > 19 && event.keyCode < 127) {
+        this.$store.commit(
+          "setCommandLine",
+          this.commandLine + String.fromCharCode(event.keyCode)
+        );
+      }
+    },
+    commandLineSearch() {
+      this.searchMyFiles({
+        search_string: this.commandLine.slice(9, this.commandLine.length),
+      });
+      this.$store.commit("setCommandLine", this.commandLine.slice(0, 9));
+    },
+    goHome() {
+      this.$store.commit("setFullPath", []);
+      this.downloadMyFiles({
+        params_id: "None",
+        params_operation: "dir_list",
+      });
+    },
+    nextSortType(type = null) {
+      switch (type) {
+        case 0:
+          this.$store.commit("setSortType", 0);
+          this.reverseSort();
+          break;
+        case 1:
+          this.$store.commit("setSortType", 1);
+          this.reverseSort();
+          break;
+        case 2:
+          this.$store.commit("setSortType", 2);
+          this.reverseSort();
+          break;
+        default:
+          if (this.sortType < 2) {
+            this.$store.commit("setSortType", this.sortType + 1);
+          } else {
+            this.$store.commit("setSortType", 0);
+          }
+          this.sortFiles();
+          break;
       }
     },
   },
   mounted() {
-    this.downloadMyFiles({
-      params_id: "None",
-      params_operation: "dir_list",
-    });
+    this.goHome();
+    document.addEventListener("keypress", this.commandLineInput);
     document.addEventListener("keydown", this.nextItem);
   },
   components: {

@@ -14,6 +14,9 @@ export default createStore({
       slicePosition: 0,
       cursorDirUp: true,
       fileManagerHeight: 20,
+      sortType: 0, // 0 - name, 1 - size, 2 - date
+      sortReverse: false,
+      commandLine: "command> ",
     };
   },
   mutations: mutations,

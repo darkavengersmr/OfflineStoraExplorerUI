@@ -45,6 +45,14 @@ pre {
   margin: 0;
 }
 
+.commandline {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 20px;
+  color: #ffffff;
+  background: #000000;
+  width: 100%;
+}
+
 .my_dir {
 }
 
