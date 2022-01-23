@@ -17,6 +17,7 @@ export default createStore({
       sortType: 0, // 0 - name, 1 - size, 2 - date
       sortReverse: false,
       commandLine: "command> ",
+      searchMode: false,
     };
   },
   mutations: mutations,

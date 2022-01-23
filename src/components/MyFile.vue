@@ -33,6 +33,7 @@ export default {
   computed: {
     ...mapState({
       fullPath: "fullPath",
+      searchMode: "searchMode",
     }),
     format_name: function () {
       function clearName(str) {
@@ -41,6 +42,10 @@ export default {
       }
 
       let f_str = clearName(this.name);
+      if (this.searchMode && this.resource) {
+        f_str = this.resource + ": " + f_str;
+      }
+
       if (f_str.length <= 28) {
         f_str = f_str.padEnd(36, " ");
 
@@ -81,6 +86,7 @@ export default {
   methods: {
     ...mapMutations({
       setCursorPosition: "setCursorPosition",
+      setSearchMode: "setSearchMode",
     }),
     oneClick() {
       this.$store.commit("setCursorPosition", this.cursor_position);
@@ -96,7 +102,12 @@ export default {
         this.directory == "true" ||
         (this.name == ".." && this.fullPath.length > 1)
       ) {
-        this.$emit("clickFile", { id: this.id });
+        if (this.searchMode) {
+          this.$store.commit("setSearchMode", false);
+          this.$emit("clickFile", { id: "search" });
+        } else {
+          this.$emit("clickFile", { id: this.id });
+        }
       }
     },
     detectClick: function () {

@@ -26,4 +26,7 @@ export default {
   setCommandLine(state, payload) {
     state.commandLine = payload;
   },
+  setSearchMode(state, payload) {
+    state.searchMode = payload;
+  },
 };

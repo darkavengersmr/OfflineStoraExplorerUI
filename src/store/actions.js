@@ -20,11 +20,24 @@ export default {
     } else if (params_operation == "dir_up") {
       path.pop();
     }
+
+    if (
+      params_id == "None" &&
+      params_operation == "dir_list" &&
+      this.state.searchMode
+    ) {
+      this.state.searchMode = false;
+      path = ["None"];
+    }
+
+    if (this.state.searchMode) {
+      path = ["None", "Результаты поиска"];
+    }
+
     context.commit("setFullPath", path);
     context.commit("setCursorPosition", 0);
   },
   async searchMyFiles(context, { search_string }) {
-    console.log(search_string);
     let myfiles = await axios
       .get("/search/", {
         params: {
@@ -34,8 +47,9 @@ export default {
       .catch(function () {});
     context.dispatch("sortFiles", myfiles.data);
     context.commit("setLastId", myfiles.data[0].parent);
-    context.commit("setFullPath", []);
+    context.commit("setFullPath", ["None", "Результаты поиска"]);
     context.commit("setCursorPosition", 0);
+    this.state.searchMode = true;
   },
   sortFiles(context, arrayToSort = null) {
     let unordered;

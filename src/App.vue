@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="activeCursor">
-      <pre>  <span @click.stop="goHome()"> Список ресурсов </span>      <span @click.stop="commandLineSearch()"> Поиск </span>       <span @click.stop="reverseSort()"> Сортировка{{sortArrow}} </span><span @click.stop="nextSortType()">{{displaySortType}}</span></pre>
+      <pre>  <span @click.stop="goHome()"> {{goHomeButton}} </span>      <span @click.stop="commandLineSearch()"> Поиск </span>       <span @click.stop="reverseSort()"> Сортировка{{sortArrow}} </span><span @click.stop="nextSortType()">{{displaySortType}}</span></pre>
     </div>
     <pre>┍━ <span class="my_path">{{ format_fullPath }}</span>{{ add_to_fullPath }}┑</pre>
     <pre>
@@ -12,9 +12,7 @@
       :id="lastId"
       :name="dir_up"
       :class="{ activeCursor: cursorDirUp }"
-      @clickFile="
-        downloadMyFiles({ params_id: $event.id, params_operation: 'dir_up' })
-      "
+      @clickFile="dirUp($event.id)"
     />
     <my-file
       v-for="(file, key, idx) in myFiles"
@@ -75,7 +73,32 @@ export default {
       sortType: "sortType",
       sortReverse: "sortReverse",
       commandLine: "commandLine",
+      searchMode: "searchMode",
     }),
+    totalSize: function () {
+      let size = 0;
+      let str_size = "";
+
+      for (let i = 0; i < this.myFilesRaw.length; i++) {
+        size += this.myFilesRaw[i].size;
+      }
+
+      if (size > 1000000000) {
+        str_size = (size / 1000000000).toFixed(0) + "G";
+      } else if (size > 1000000) {
+        str_size = (size / 1000000).toFixed(0) + "M";
+      } else if (size > 1000) {
+        str_size = (size / 1000).toFixed(0) + "K";
+      }
+      return str_size;
+    },
+    goHomeButton: function () {
+      if (this.searchMode) {
+        return "Завершить поиск";
+      } else {
+        return "Список ресурсов";
+      }
+    },
     sortArrow: function () {
       if (this.sortReverse) {
         return "↑";
@@ -128,8 +151,18 @@ export default {
       }
       let f_str = clearPath(path);
       if (this.fullPath.length == 1) {
-        f_str = "Offline Stora Explorer v.0.4 ";
+        f_str = "Offline Stora Explorer v.0.5 ";
       }
+
+      if (f_str == "Результаты поиска") {
+        f_str =
+          f_str +
+          ": " +
+          this.myFilesRaw.length +
+          " Общий объем: " +
+          this.totalSize;
+      }
+
       if (f_str.length <= 50) {
         return f_str;
       } else {
@@ -140,6 +173,7 @@ export default {
             f_str.length - 45 - this.fullPath[1].length,
             f_str.length
           );
+
         return f_str;
       }
     },
@@ -163,6 +197,7 @@ export default {
     ...mapMutations({
       setCursorPosition: "setCursorPosition",
       setCommandLine: "setCommandLine",
+      setSearchMode: "setSearchMode",
     }),
     nextItem(event) {
       //event.stopPropagation();
@@ -178,11 +213,20 @@ export default {
           params_operation: "dir_list",
           params_name: this.myFiles[this.cursorPosition].name,
         });
-      } else if (event.keyCode == 13 && this.cursorDirUp) {
-        this.downloadMyFiles({
-          params_id: this.lastId,
-          params_operation: "dir_up",
-        });
+      } else if (
+        event.keyCode == 13 &&
+        this.cursorDirUp &&
+        this.myFiles[this.cursorPosition].parent != "None"
+      ) {
+        if (!this.searchMode) {
+          this.downloadMyFiles({
+            params_id: this.lastId,
+            params_operation: "dir_up",
+          });
+        } else {
+          this.$store.commit("setSearchMode", false);
+          this.goHome();
+        }
       } else if (event.keyCode == 38 && this.cursorPosition > 0) {
         this.$store.commit("setCursorPosition", this.cursorPosition - 1);
       } else if (
@@ -219,7 +263,7 @@ export default {
     commandLineInput(event) {
       event.stopPropagation();
       event.preventDefault();
-      if (event.keyCode == 13 && this.commandLine.length > 9) {
+      if (event.keyCode == 13 && this.commandLine.length > 11) {
         this.searchMyFiles({
           search_string: this.commandLine.slice(9, this.commandLine.length),
         });
@@ -232,10 +276,12 @@ export default {
       }
     },
     commandLineSearch() {
-      this.searchMyFiles({
-        search_string: this.commandLine.slice(9, this.commandLine.length),
-      });
-      this.$store.commit("setCommandLine", this.commandLine.slice(0, 9));
+      if (this.commandLine.length > 11) {
+        this.searchMyFiles({
+          search_string: this.commandLine.slice(9, this.commandLine.length),
+        });
+        this.$store.commit("setCommandLine", this.commandLine.slice(0, 9));
+      }
     },
     goHome() {
       this.$store.commit("setFullPath", []);
@@ -243,6 +289,13 @@ export default {
         params_id: "None",
         params_operation: "dir_list",
       });
+    },
+    dirUp(id) {
+      if (id != "search") {
+        this.downloadMyFiles({ params_id: id, params_operation: "dir_up" });
+      } else {
+        this.goHome();
+      }
     },
     nextSortType(type = null) {
       switch (type) {
