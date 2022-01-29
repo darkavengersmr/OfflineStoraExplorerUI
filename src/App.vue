@@ -45,7 +45,7 @@
     >
     <input v-model="commandLine" class="commandline" />
     <div>
-      <pre>1<span class="activeCursor">On/off_1</span> 2<span class="activeCursor">On/off_2</span> 3<span class="activeCursor">On/off_3</span> 4<span class="activeCursor">On/off_4</span> 5<span class="activeCursor">On/off_5</span> 6<span class="activeCursor">On/off_6</span> 0<span class="activeCursor">Status</span></pre>
+      <pre>1<span class="activeCursor" @click.stop="cmd('d',1)">On/off_1</span> 2<span class="activeCursor" @click.stop="cmd('d',2)">On/off_2</span> 3<span class="activeCursor"  @click.stop="cmd('d',3)">On/off_3</span> 4<span class="activeCursor" @click.stop="cmd('d',4)">On/off_4</span> 5<span class="activeCursor" @click.stop="cmd('d',5)">On/off_5</span> 6<span class="activeCursor" @click.stop="cmd('d',6)">On/off_6</span> 0<span class="activeCursor" @click.stop="cmd('s',0)">Status</span></pre>
     </div>
   </div>
 </template>
@@ -151,7 +151,7 @@ export default {
       }
       let f_str = clearPath(path);
       if (this.fullPath.length == 1) {
-        f_str = "Offline Stora Explorer v.0.5 ";
+        f_str = "Offline Stora Explorer v.1.0 ";
       }
 
       if (f_str == "Результаты поиска") {
@@ -193,6 +193,7 @@ export default {
       searchMyFiles: "searchMyFiles",
       sortFiles: "sortFiles",
       reverseSort: "reverseSort",
+      sendCommand: "sendCommand",
     }),
     ...mapMutations({
       setCursorPosition: "setCursorPosition",
@@ -288,6 +289,18 @@ export default {
       this.downloadMyFiles({
         params_id: "None",
         params_operation: "dir_list",
+      });
+    },
+    cmd(c, n) {
+      let command;
+      if (c == "d") {
+        command = "disk";
+      } else {
+        command = "status";
+      }
+      this.sendCommand({
+        command_string: command,
+        parameter_string: n,
       });
     },
     dirUp(id) {

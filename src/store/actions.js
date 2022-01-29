@@ -51,6 +51,14 @@ export default {
     context.commit("setCursorPosition", 0);
     this.state.searchMode = true;
   },
+  async sendCommand(context, { command_string, parameter_string }) {
+    await axios.get("/command/", {
+      params: {
+        command: command_string,
+        parameter: parameter_string,
+      },
+    });
+  },
   sortFiles(context, arrayToSort = null) {
     let unordered;
     if (arrayToSort !== null) {
